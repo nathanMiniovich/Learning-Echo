@@ -5,6 +5,7 @@
 #include <sys/socket.h>
 #include <string.h>
 #include <unistd.h>
+#include <fcntl.h>
 
 #define MAXBUFSIZE 1024
 
@@ -12,7 +13,7 @@ int main(int argc, char** argv){
 
 	int socketDescriptor;
 	int sockDes2;
-	int msglen:
+	int msglen;
 	char buffer[MAXBUFSIZE];
 	struct sockaddr_in serverAdder;
 	struct sockaddr_in clientAdder;
@@ -24,7 +25,7 @@ int main(int argc, char** argv){
 
 	serverAdder.sin_family = AF_INET;
 	serverAdder.sin_addr.s_addr = htonl(INADDR_LOOPBACK);
-	serverAdder.sin_addr.port = htons(50000);
+	serverAdder.sin_port = htons(50000);
 
 	if((sockFlags = fcntl(socketDescriptor,F_GETFL, 0)) < 0){
 		fprintf(stderr, "fcntl with F_GETFL failed, exiting\n");
@@ -38,7 +39,7 @@ int main(int argc, char** argv){
 
 	bind(socketDescriptor, (struct sockaddr*) &serverAdder, sizeof(serverAdder));
 	listen(socketDescriptor,1);
-	clientAdderLength = sizeof(clientAdder);
+	int clientAdderLength = sizeof(clientAdder);
 	sockDes2 = accept(socketDescriptor, (struct sockaddr*) &clientAdder, &clientAdderLength);
 
 	int sent;
