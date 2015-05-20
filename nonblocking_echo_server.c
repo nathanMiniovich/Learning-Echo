@@ -6,7 +6,9 @@
 #include <string.h>
 #include <unistd.h>
 #include <fcntl.h>
+#include <sys/select.h>
 
+#define max(a,b) (a>b?a:b)
 #define MAXBUFSIZE 1024
 
 int main(int argc, char** argv){
@@ -28,9 +30,6 @@ int main(int argc, char** argv){
 	serverAdder.sin_port = htons(50000);
 
 	bind(socketDescriptor, (struct sockaddr*) &serverAdder, sizeof(serverAdder));
-	listen(socketDescriptor,1);
-	int clientAdderLength = sizeof(clientAdder);
-	sockDes2 = accept(socketDescriptor, (struct sockaddr*) &clientAdder, &clientAdderLength);
 
 	if((sockFlags = fcntl(socketDescriptor,F_GETFL, 0)) < 0){
 		fprintf(stderr, "fcntl with F_GETFL failed, exiting\n");
@@ -44,29 +43,69 @@ int main(int argc, char** argv){
 
 	int sent;
 	int sentTotal;
+	int clientAdderLength;
+	listen(socketDescriptor,1);
+	fd_set readfds,writefds;
+	int fdlist[1024];
+	int max_fd = 0;
+	int nfds;
+	int i;
 
 	for(; ;){
-		sentTotal = 0;
 
-		msglen = recv(sockDes2,buffer,sizeof(buffer),0);
+		FD_ZERO(&readfds);
+		FD_ZERO(&writefds);
+		FD_CLR(0,&readfds);
+		FD_CLR(0,&writefds);
+		FD_SET(socketDescriptor,&readfds);
+		FD_SET(socketDescriptor,&writefds);
+		nfds = socketDescriptor;
 
-		if(msglen == 0){
-			printf("No messages are available, peer has performed orderly shutdown, exiting\n");
-			goto error;
+		for (i=0; i<max_fd; i++) {
+
+			nfds = max(nfds,fdlist[i]);
+
+			if(fdlist[i]){
+				FD_SET(fdlist[i],&readfds);
+				FD_SET(fdlist[i], &writefds);
+			}
 		}
 
-		if(msglen == -1){
-			continue;
-		}
+		if(select(nfds+1,&readfds,&writefds,NULL,0) != -1){
 
-		while(sentTotal < msglen){
-			sent = send(sockDes2,&buffer[sentTotal],msglen - sentTotal, 0);
-			sentTotal += sent;
+			if (FD_ISSET(socketDescriptor, &readfds)) {
+				clientAdderLength = sizeof(clientAdder);
+				fdlist[max_fd] = accept(socketDescriptor, (struct sockaddr*) &clientAdder, &clientAdderLength);
+				max_fd++;
+
+			}
+			for (i=0; i<max_fd; i++) {
+				if (FD_ISSET(fdlist[i], &readfds)) {
+					sentTotal = 0;
+
+					msglen = recv(fdlist[i],buffer,sizeof(buffer),0);
+
+					if(msglen == 0){
+						printf("Client socket closed\n");
+						close(fdlist[i]);
+						fdlist[i] = 0;
+					}
+
+					if(msglen == -1){
+						continue;
+					}
+
+				}	
+
+				if (FD_ISSET(fdlist[i], &writefds)) {
+					while(sentTotal < msglen){
+						sent = send(fdlist[i],&buffer[sentTotal],msglen - sentTotal, 0);
+						sentTotal += sent;
+					}
+				}
+			}
 		}
 	}
 
-error:
-	close(sockDes2);
 	exit(0);
-
 }
