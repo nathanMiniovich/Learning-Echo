@@ -27,6 +27,11 @@ int main(int argc, char** argv){
 	serverAdder.sin_addr.s_addr = htonl(INADDR_ANY);
 	serverAdder.sin_port = htons(50000);
 
+	bind(socketDescriptor, (struct sockaddr*) &serverAdder, sizeof(serverAdder));
+	listen(socketDescriptor,1);
+	int clientAdderLength = sizeof(clientAdder);
+	sockDes2 = accept(socketDescriptor, (struct sockaddr*) &clientAdder, &clientAdderLength);
+
 	if((sockFlags = fcntl(socketDescriptor,F_GETFL, 0)) < 0){
 		fprintf(stderr, "fcntl with F_GETFL failed, exiting\n");
 		exit(0);
@@ -36,11 +41,6 @@ int main(int argc, char** argv){
 		fprintf(stderr, "fcntl with F_SETFL failed, exiting\n");
 		exit(0);
 	}
-
-	bind(socketDescriptor, (struct sockaddr*) &serverAdder, sizeof(serverAdder));
-	listen(socketDescriptor,1);
-	int clientAdderLength = sizeof(clientAdder);
-	sockDes2 = accept(socketDescriptor, (struct sockaddr*) &clientAdder, &clientAdderLength);
 
 	int sent;
 	int sentTotal = 0;
