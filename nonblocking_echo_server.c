@@ -43,10 +43,11 @@ int main(int argc, char** argv){
 	}
 
 	int sent;
-	int sentTotal = 0;
+	int sentTotal;
 
 	for(; ;){
-		
+		sentTotal = 0;
+
 		msglen = recv(sockDes2,buffer,sizeof(buffer),0);
 
 		if(msglen == 0){
