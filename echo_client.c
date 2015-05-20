@@ -10,7 +10,7 @@
 
 int main(int argc, char** argv){
 
-	int socketDescriptor
+	int socketDescriptor;
 	char msg[MAXBUFSIZE];
 	char echo[MAXBUFSIZE];
 
@@ -20,7 +20,7 @@ int main(int argc, char** argv){
 	socketDescriptor = socket(AF_INET,SOCK_STREAM,0);
 
 	addr.sin_family = AF_INET;
-	inet_pton(AF_INET,"192.168.100.155",&saddr.sin_addr.s_addr)
+	inet_pton(AF_INET,"192.168.100.155",&addr.sin_addr.s_addr);
 	addr.sin_port = htons(50000);
 
 	connect(socketDescriptor,(struct sockaddr*)&addr, sizeof(addr));
