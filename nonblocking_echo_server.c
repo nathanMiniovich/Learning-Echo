@@ -24,7 +24,7 @@ int main(int argc, char** argv){
 	memset(&serverAdder,0,sizeof(serverAdder));
 
 	serverAdder.sin_family = AF_INET;
-	serverAdder.sin_addr.s_addr = htonl(INADDR_LOOPBACK);
+	serverAdder.sin_addr.s_addr = htonl(INADDR_ANY);
 	serverAdder.sin_port = htons(50000);
 
 	if((sockFlags = fcntl(socketDescriptor,F_GETFL, 0)) < 0){
