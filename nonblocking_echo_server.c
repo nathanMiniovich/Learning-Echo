@@ -50,6 +50,9 @@ int main(int argc, char** argv){
 	int max_fd = 0;
 	int nfds;
 	int i;
+	struct timeval tv;
+	tv.tv_sec = 0;
+	tv.tv_usec = 0;
 
 	for(; ;){
 
@@ -71,7 +74,7 @@ int main(int argc, char** argv){
 			}
 		}
 
-		if(select(nfds+1,&readfds,&writefds,NULL,0) != -1){
+		if(select(nfds+1,&readfds,&writefds,NULL, &tv) != -1){
 
 			if (FD_ISSET(socketDescriptor, &readfds)) {
 				clientAdderLength = sizeof(clientAdder);
