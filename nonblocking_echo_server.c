@@ -15,7 +15,7 @@ int main(int argc, char** argv){
 
 	int socketDescriptor;
 	int sockDes2;
-	int msglen;
+	int msglen = 0;
 	char buffer[MAXBUFSIZE];
 	struct sockaddr_in serverAdder;
 	struct sockaddr_in clientAdder;
@@ -41,8 +41,8 @@ int main(int argc, char** argv){
 		exit(0);
 	}
 
-	int sent;
-	int sentTotal;
+	int sent = 0;
+	int sentTotal = 0;
 	int clientAdderLength;
 	listen(socketDescriptor,1);
 	fd_set readfds,writefds;
@@ -75,18 +75,22 @@ int main(int argc, char** argv){
 		}
 
 		if(select(nfds+1,&readfds,&writefds,NULL, &tv) != -1){
+			//printf("selected, %d\n", nfds);
 
 			if (FD_ISSET(socketDescriptor, &readfds)) {
 				clientAdderLength = sizeof(clientAdder);
 				fdlist[max_fd] = accept(socketDescriptor, (struct sockaddr*) &clientAdder, &clientAdderLength);
+			        //printf("accpeted fd=%d\n", fdlist[max_fd]);
 				max_fd++;
-
 			}
 			for (i=0; i<max_fd; i++) {
 				if (FD_ISSET(fdlist[i], &readfds)) {
+			                //printf("readfds fd=%d\n", fdlist[i]);
 					sentTotal = 0;
 
 					msglen = recv(fdlist[i],buffer,sizeof(buffer),0);
+
+					//printf("%d",msglen);
 
 					if(msglen == 0){
 						printf("Client socket closed\n");
@@ -101,6 +105,7 @@ int main(int argc, char** argv){
 				}	
 
 				if (FD_ISSET(fdlist[i], &writefds)) {
+			                //printf("writefds fd=%d\n", fdlist[i]);
 					while(sentTotal < msglen){
 						sent = send(fdlist[i],&buffer[sentTotal],msglen - sentTotal, 0);
 						sentTotal += sent;
